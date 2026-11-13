@@ -26,11 +26,11 @@ Visit http://localhost:4173. Run `npm test` from `apps/dashboard` and `packages/
 
 - `apps/dashboard`: dependency-free local HTTP dashboard, attack lab, audit log, tests.
 - `packages/sdk`: authorization policy evaluation and TypeScript SDK skeleton.
-- `contracts/vault`: locally compiled NEAR Rust prototype. It has not been run in a NEAR sandbox or deployed to Testnet; do not deploy it with real funds.
+- `contracts/vault`: NEAR Rust prototype with a verified Testnet deployment and one successful self-payment flow. It has not been audited; do not deploy it with real funds.
 - `docs/THREAT_MODEL.md`: attacker assumptions and boundaries.
 - `docs/SUBMISSION.md`: submission checklist and demo script.
 - `docs/TESTNET_STATUS.md`: verified deployment evidence and current Testnet limitation.
 
 ## Security status
 
-**Not production ready.** The contract compiles for `wasm32-unknown-unknown` with `cargo build --release --target wasm32-unknown-unknown`, but it has not been run in a NEAR sandbox and there is no confirmed Testnet transaction. No real payments occur in this demo. Browser POST origin and localhost host checks reduce casual cross-site access but are not authentication; run on loopback only. Audit hashes can be recomputed by someone with filesystem control. The simulation is an offchain evaluator, not an onchain firewall.
+**Not production ready.** The contract was built with `cargo-near` and deployed to NEAR Testnet; authorization, execution and replay rejection have Testnet evidence in `docs/TESTNET_STATUS.md`. The dashboard still performs only local simulation and does not submit on-chain transactions. The contract has not had a security audit or a NEAR sandbox test suite. Browser POST origin and localhost host checks reduce casual cross-site access but are not authentication; run on loopback only. Audit hashes can be recomputed by someone with filesystem control.
