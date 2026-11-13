@@ -64,8 +64,8 @@ export function createServer({auditFile=process.env.ÉGIDE_AUDIT_FILE||path.join
  if(req.method==='POST'&&url.pathname.startsWith('/api/simulate/')){const id=url.pathname.split('/').pop();const result=simulate(id);if(!result)return json(res,404,{error:'Unknown scenario'});try{const record=await audit.append({kind:'simulation',scenario:id,decision:result.decision,authorizationId:result.authorization.id,onchain:false});return json(res,200,{...result,auditSequence:record.sequence,auditHash:record.hash})}catch{return json(res,500,{error:'Audit write failed; simulation not recorded'});}}
  if(req.method!=='GET')return json(res,405,{error:'Method not allowed'});
  let name=url.pathname==='/'?'index.html':url.pathname.slice(1);
- if(!['index.html','styles.css','app.js'].includes(name))return json(res,404,{error:'Not found'});
- const type=name.endsWith('.css')?'text/css':name.endsWith('.js')?'text/javascript':'text/html';
+ if(!['index.html','styles.css','app.js','egide-logo.png'].includes(name))return json(res,404,{error:'Not found'});
+ const type=name.endsWith('.png')?'image/png':name.endsWith('.css')?'text/css':name.endsWith('.js')?'text/javascript':'text/html';
  try{res.writeHead(200,{'Content-Type':type+'; charset=utf-8'});res.end(await readFile(path.join(base,'public',name)))}catch{json(res,500,{error:'Unable to load asset'})}
  })}
 if(process.argv[1]===fileURLToPath(import.meta.url))createServer().listen(port,'127.0.0.1',()=>console.log(`ÉGIDE dashboard http://localhost:${port}`));
