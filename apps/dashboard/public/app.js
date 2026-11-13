@@ -38,6 +38,12 @@ async function show(name){
   const records=await request('/api/permissions');
   if(!records.length)workspace.append(text('p','No local authorizations yet. Create your first policy above.'));
   for(const record of records){const row=document.createElement('article');row.className='audit-row';row.append(text('h2',record.status+' · '+record.id.slice(0,8)),text('p',record.agent+' → '+record.recipient),text('p',record.amountYocto+' yoctoNEAR · expires '+new Date(record.expiresAtMs).toLocaleString()));
+   const proposalForm=document.createElement('form');proposalForm.className='permission-form';
+   proposalForm.append(text('p','Evaluate an agent request against this policy (local check; no funds move).'));
+   for(const field of ['agent','recipient','amountYocto']){const label=text('label',field==='amountYocto'?'Requested amount (yoctoNEAR)':'Requested '+field);const input=document.createElement('input');input.name=field;input.value=record[field];input.required=true;label.append(input);proposalForm.append(label);}
+   const evaluate=text('button','Evaluate request');evaluate.className='run';const outcome=text('p','');outcome.setAttribute('role','status');proposalForm.append(evaluate,outcome);
+   proposalForm.onsubmit=async event=>{event.preventDefault();evaluate.disabled=true;try{const data=await request('/api/permissions',{...Object.fromEntries(new FormData(proposalForm)),action:'evaluate',id:record.id});outcome.textContent=data.decision.allowed?'ALLOWED · Policy checks passed. No transaction submitted.':'BLOCKED · '+data.decision.reasons.join(', ');outcome.className=data.decision.allowed?'green':'warning';}catch(err){outcome.textContent=err.message;}finally{evaluate.disabled=false;}};
+   row.append(proposalForm);
    if(record.status==='Active'){const revoke=text('button','Revoke');revoke.className='scenario';revoke.onclick=async()=>{try{await request('/api/permissions',{action:'revoke',id:record.id});await show(name);}catch(err){message.textContent=err.message;}};row.append(revoke);}workspace.append(row);
   }
  }else{

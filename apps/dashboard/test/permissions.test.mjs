@@ -15,7 +15,10 @@ test('authorization persists, rejects invalid amounts and can be revoked',async(
   assert.equal((await post({...input,amountYocto:'-1'})).status,400);
   const created=await post(input);assert.equal(created.status,201);const record=await created.json();
   assert.equal((await fetch(url).then(r=>r.json()))[0].id,record.id);
+  assert.equal((await post({...input,action:'evaluate',id:record.id}).then(r=>r.json())).decision.allowed,true);
+  assert.deepEqual((await post({...input,action:'evaluate',id:record.id,recipient:'attacker.testnet'}).then(r=>r.json())).decision.reasons,['recipient_mismatch']);
   assert.equal((await post({action:'revoke',id:record.id})).status,200);
   assert.equal((await fetch(url).then(r=>r.json()))[0].status,'Revoked');
+  assert.equal((await post({...input,action:'evaluate',id:record.id}).then(r=>r.json())).decision.allowed,false);
  }finally{await new Promise(r=>server.close(r));await rm(dir,{recursive:true});}
 });

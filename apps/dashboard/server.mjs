@@ -34,6 +34,14 @@ export function createServer({auditFile=process.env.ÉGIDE_AUDIT_FILE||path.join
    if(req.method==='POST'){
     let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>4096)return json(res,413,{error:'Request too large'});}
     const input=JSON.parse(raw);
+    if(input.action==='evaluate'){
+     const permission=permissions.get(input.id);
+     if(!permission)return json(res,404,{error:'Unknown authorization'});
+     const proposal={agent:input.agent,recipient:input.recipient,amountYocto:input.amountYocto};
+     const decision=evaluatePayment(permission,proposal,Date.now());
+     await audit.append({kind:'policy_evaluation',authorizationId:input.id,proposal,decision,onchain:false});
+     return json(res,200,{decision,onchain:false});
+    }
     if(input.action==='revoke'){
      if(!permissions.has(input.id))return json(res,404,{error:'Unknown authorization'});
      await audit.append({kind:'permission_revoked',id:input.id,onchain:false});return json(res,200,{ok:true});
