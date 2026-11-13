@@ -16,6 +16,16 @@ Last verified: 2026-11-13
 
 ## Remaining limitations
 
+## Independent agent payment verified
+
+The owner/vault `egide-v05-20261113a.testnet` authorized agent `egide-agent-v05.testnet` to pay recipient `egide-vendor-v05.testnet` exactly 0.001 Testnet NEAR. These are three separate account identities.
+
+- Authorization 1: [32n9bEtuGmuLUrYxfYtAjmBLCN33hF5KL1FAM5y86AL1](https://testnet.nearblocks.io/txns/32n9bEtuGmuLUrYxfYtAjmBLCN33hF5KL1FAM5y86AL1).
+- Execution signed by the agent: [CERnPh2upJz4s2yu9oayvDr6bSVbagL3hRmHGQRGzS4S](https://testnet.nearblocks.io/txns/CERnPh2upJz4s2yu9oayvDr6bSVbagL3hRmHGQRGzS4S).
+- Subsequent contract views returned authorization 1 as `Consumed`, with the expected agent and recipient, and pending amount `0`.
+
+## Outstanding integration
+
 - The Testnet proof covers one owner/agent self-payment and a replay rejection, not a security audit or a comprehensive sandbox suite.
 - The dashboard remains an explicitly off-chain simulation; it is not wired to submit Testnet transactions.
 - The signing key is stored locally outside this repository and must never be committed.

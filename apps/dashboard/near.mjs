@@ -10,6 +10,6 @@ export async function readVault(fetcher=fetch){
   // Preserve large integer values as text; do not round yoctoNEAR balances.
   return {value:Buffer.from(result.result).toString(),blockHeight:result.block_height};
  };
- const [account,pending,authorization]=await Promise.all([rpc({request_type:'view_account'}),view('get_pending_yocto'),view('get_authorization',{id:0})]);
+ const [account,pending,authorization]=await Promise.all([rpc({request_type:'view_account'}),view('get_pending_yocto'),view('get_authorization',{id:1})]);
  return {network:'testnet',account:contractAccount,balanceYocto:account.amount,codeHash:account.code_hash,pendingYocto:pending.value,authorizationJson:authorization.value,blockHeight:account.block_height,checkedAt:new Date().toISOString(),readOnly:true};
 }
