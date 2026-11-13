@@ -1,5 +1,7 @@
 # ÉGIDE v0.5 — Intent-Aware Agent Payment Security
 
+[View submission screenshots and captions](docs/screenshots/README.md)
+
 **Hackathon submission candidate / local prototype.** ÉGIDE is a programmable authorization boundary for AI-initiated payments. Owner-approved agent, recipient, exact amount and expiry are verified against agent proposals. The dashboard demonstrates five blocked adversarial cases and one permitted case; the audit service writes hash-chained local evidence.
 
 ## Start locally
