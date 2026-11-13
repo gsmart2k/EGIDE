@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { evaluatePayment } from '../src/policy.mjs';
+const auth = { id: 1, agent: 'agent.testnet', recipient: 'designer.testnet', amountYocto: '5000000000000000000000000', expiresAtMs: 2000, status: 'Active' };
+const valid = { agent: auth.agent, recipient: auth.recipient, amountYocto: auth.amountYocto };
+test('legitimate authorized payment passes preflight', () => assert.equal(evaluatePayment(auth, valid, 1000).allowed, true));
+test('invoice recipient redirection blocked', () => assert.deepEqual(evaluatePayment(auth, {...valid, recipient:'attacker.testnet'},1000).reasons, ['recipient_mismatch']));
+test('amount inflation blocked', () => assert.deepEqual(evaluatePayment(auth, {...valid, amountYocto:'6000000000000000000000000'},1000).reasons, ['amount_mismatch']));
+test('other agent blocked', () => assert.deepEqual(evaluatePayment(auth, {...valid, agent:'evil.testnet'},1000).reasons, ['unauthorized_agent']));
+test('expired blocked', () => assert.deepEqual(evaluatePayment(auth,valid,2000).reasons, ['authorization_expired']));
+test('replay preflight blocked', () => assert.deepEqual(evaluatePayment({...auth,status:'Consumed'},valid,1000).reasons, ['authorization_not_active']));
+test('malformed amount blocked', () => assert.deepEqual(evaluatePayment(auth,{...valid,amountYocto:'5e24'},1000).reasons, ['amount_mismatch']));

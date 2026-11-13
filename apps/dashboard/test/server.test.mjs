@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {simulate,createServer} from '../server.mjs';
+for(const id of ['injection','overspend','impersonation','replay','expired'])test(`${id} is blocked`,()=>{assert.equal(simulate(id).decision.allowed,false)});
+test('legitimate payment is allowed',()=>assert.equal(simulate('legitimate').decision.allowed,true));
+test('unknown scenario rejected',()=>assert.equal(simulate('missing'),null));
+test('API serves scenario list and blocks attack',async()=>{const server=createServer().listen(0);try{await new Promise(resolve=>server.once('listening',resolve));const port=server.address().port;const scenarios=await fetch(`http://localhost:${port}/api/scenarios`).then(r=>r.json());assert.equal(scenarios.length,6);const result=await fetch(`http://localhost:${port}/api/simulate/injection`,{method:'POST'}).then(r=>r.json());assert.deepEqual(result.decision.reasons,['recipient_mismatch']);assert.equal(result.onchain,false)}finally{server.close()}});

@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createServer} from '../server.mjs';
+import {mkdtemp,rm} from 'node:fs/promises';
+import os from 'node:os';import path from 'node:path';
+test('health explicitly identifies demo-only mode',async()=>{const dir=await mkdtemp(path.join(os.tmpdir(),'egide-'));const server=createServer({auditFile:path.join(dir,'events.jsonl')}).listen(0,'127.0.0.1');try{await new Promise(r=>server.once('listening',r));const base=`http://127.0.0.1:${server.address().port}`;const health=await fetch(base+'/api/health').then(r=>r.json());assert.equal(health.onchain,false);assert.equal(health.name,'EGIDE');const cross=await fetch(base+'/api/simulate/legitimate',{method:'POST',headers:{Origin:'https://evil.example'}});assert.equal(cross.status,403);const rebinding=await new Promise((resolve,reject)=>{import('node:http').then(({request})=>{const req=request(base+'/api/health',{headers:{Host:'evil.example'}},res=>{res.resume();resolve(res.statusCode)});req.on('error',reject);req.end()})});assert.equal(rebinding,403);const ok=await fetch(base+'/api/simulate/injection',{method:'POST'});assert.equal(ok.status,200)}finally{server.close();await rm(dir,{recursive:true,force:true})}});
