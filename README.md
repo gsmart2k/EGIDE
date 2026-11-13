@@ -29,6 +29,7 @@ Visit http://localhost:4173. Run `npm test` from `apps/dashboard` and `packages/
 - `contracts/vault`: locally compiled NEAR Rust prototype. It has not been run in a NEAR sandbox or deployed to Testnet; do not deploy it with real funds.
 - `docs/THREAT_MODEL.md`: attacker assumptions and boundaries.
 - `docs/SUBMISSION.md`: submission checklist and demo script.
+- `docs/TESTNET_STATUS.md`: verified deployment evidence and current Testnet limitation.
 
 ## Security status
 

@@ -1,5 +1,5 @@
 use near_sdk::{env, near, require, AccountId, NearToken, Promise, PromiseError};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[near(serializers = [json, borsh])]
 #[derive(Clone)]
@@ -19,7 +19,9 @@ pub struct Authorization {
 pub struct Vault {
     owner: AccountId,
     next_id: u64,
-    authorizations: HashMap<u64, Authorization>,
+    // BTreeMap is deterministic in a WASM contract. HashMap's randomized
+    // hasher can require entropy unavailable in the NEAR runtime.
+    authorizations: BTreeMap<u64, Authorization>,
     paused: bool,
     pending_yocto: u128,
     reserve_yocto: u128,
@@ -34,7 +36,7 @@ impl Vault {
     #[init]
     pub fn new(owner: AccountId) -> Self {
         require!(!env::state_exists(), "Already initialized");
-        Self { owner, next_id: 0, authorizations: HashMap::new(), paused: false, pending_yocto: 0, reserve_yocto: 0 }
+        Self { owner, next_id: 0, authorizations: BTreeMap::new(), paused: false, pending_yocto: 0, reserve_yocto: 0 }
     }
 
     #[payable]
