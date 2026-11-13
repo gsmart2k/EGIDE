@@ -1,5 +1,7 @@
 import http from 'node:http';
 import {readVault} from './near.mjs';
+import {runTestPayment} from './testnet-payment.mjs';
+let paymentInProgress=false;
 import {AuditLog} from './audit.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +28,13 @@ export function createServer({auditFile=process.env.ÉGIDE_AUDIT_FILE||path.join
  // Reject cross-origin browser POSTs; the lab is local-only and unauthenticated.
  if(req.method==='POST'){const origin=req.headers.origin;if(origin && !allowedOrigins.has(origin) && origin !== `http://localhost:${req.socket.localPort}` && origin !== `http://127.0.0.1:${req.socket.localPort}`)return json(res,403,{error:'Cross-origin request denied'});}
  if(url.pathname==='/api/health' && req.method==='GET')return json(res,200,{name:'EGIDE',version:'0.5.0',mode:'offchain-local-demo',onchain:false});
+ if(url.pathname==='/api/near/payment'&&req.method==='POST'){
+  if(process.env.EGIDE_ENABLE_TESTNET_PAYMENTS!=='1')return json(res,403,{error:'Testnet signing is disabled on this server'});
+  if(!req.headers.origin||![`http://localhost:${req.socket.localPort}`,`http://127.0.0.1:${req.socket.localPort}`].includes(req.headers.origin))return json(res,403,{error:'Same-origin browser request required'});
+  if(paymentInProgress)return json(res,409,{error:'A Testnet payment is already running'});
+  paymentInProgress=true;
+  try{const payment=await runTestPayment();await audit.append({kind:'testnet_payment',payment,onchain:true});return json(res,200,payment);}catch(error){return json(res,502,{error:error.message});}finally{paymentInProgress=false;}
+ }
  if(url.pathname==='/api/near/status'&&req.method==='GET'){
   try{return json(res,200,await readVault());}catch{return json(res,502,{error:'Live Testnet status unavailable. Retry shortly.'});}
  }
