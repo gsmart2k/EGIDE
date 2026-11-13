@@ -20,20 +20,6 @@ Our prototype includes a redesigned dashboard, persistent local policy creation 
 
 We have 14 dashboard tests, seven SDK policy tests, ten contract tests using NEAR's mocked runtime, and a TypeScript check. Testnet evidence includes successful authorization, separate-agent payment execution, callback completion and replay rejection. Local policy checks and on-chain execution are explicitly labeled. The demo uses locally configured Testnet keys; production wallet authentication, full sandbox integration tests and an independent security audit remain future work.
 
-## X post draft
-
-Built ÉGIDE at NEAR HACKATHON 🛡️
-
-Give agents freedom. Keep the authority.
-
-Owner-approved payments, policy checks, and a working NEAR Testnet flow with separate agent + recipient accounts.
-
-Code: https://github.com/gsmart2k/EGIDE
-
-@NEARProtocol #NEARHackathon
-
-Attach a demo video or the screenshots described below. Publish only after owner approval.
-
 ## 75-second demo / recording plan
 
 0–10s — Overview and logo. “An AI agent can read a malicious invoice. It should never get to rewrite the owner's payment permission. This is ÉGIDE.”
