@@ -26,6 +26,15 @@ The owner/vault `egide-v05-20261113a.testnet` authorized agent `egide-agent-v05.
 
 ## Outstanding integration
 
+## Browser payment verified
+
+Authorization 2 was created and executed through the opt-in dashboard payment control:
+
+- Owner authorization: https://testnet.nearblocks.io/txns/E9XJJm2vd1pew6b3xWM37YdQrvgjvnUgfhmS5s74XwQp
+- Agent execution: https://testnet.nearblocks.io/txns/9LACPWH6zYY3AJv2pZJEUGRoskHw2t2LLQr87N8zLr6u
+- Subsequent contract views confirmed authorization 2 `Consumed` and pending amount `0`.
+- Signing uses local Testnet demo credentials and requires `EGIDE_ENABLE_TESTNET_PAYMENTS=1`. It is not a production wallet connection.
+
 - The Testnet proof covers one owner/agent self-payment and a replay rejection, not a security audit or a comprehensive sandbox suite.
 - The dashboard remains an explicitly off-chain simulation; it is not wired to submit Testnet transactions.
 - The signing key is stored locally outside this repository and must never be committed.
