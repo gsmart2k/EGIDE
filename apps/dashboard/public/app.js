@@ -19,6 +19,9 @@ for(const name of ['Overview','Authorizations','Agent Activity','Attack Lab']){
  button.onclick=()=>show(name);nav.append(button);
 }
 main.prepend(nav);
+const topBrand=document.createElement('a');topBrand.className='top-brand';topBrand.href='#overview';topBrand.setAttribute('aria-label','ÉGIDE overview');
+const topLogo=document.createElement('img');topLogo.src='/egide-logo.png?v=2';topLogo.alt='ÉGIDE aegis logo';topLogo.width=44;topLogo.height=44;
+topBrand.append(topLogo,document.createTextNode('ÉGIDE'));topBrand.onclick=e=>{e.preventDefault();show('Overview');};nav.prepend(topBrand);
 const sideLinks=[...document.querySelectorAll('aside a')];
 sideLinks.forEach((a,i)=>{a.href='#'+['overview','authorizations','activity','lab'][i];a.onclick=e=>{e.preventDefault();show(['Overview','Authorizations','Agent Activity','Attack Lab'][i]);};});
 async function request(url,body){const r=await fetch(url,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});const data=await r.json();if(!r.ok)throw Error(data.error||'Request failed');return data;}
