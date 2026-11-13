@@ -1,3 +1,4 @@
+import './public-demo.mjs';
 const list=document.querySelector('#scenarios');const result=document.querySelector('#result');
 const crest=document.querySelector('.crest');const logo=document.createElement('img');logo.src='/egide-logo.png';logo.alt='ÉGIDE aegis emblem';logo.width=42;logo.height=42;crest.replaceChildren(logo);
 document.querySelector('header h1').innerHTML='Give agents freedom.<br>Keep the authority.';
