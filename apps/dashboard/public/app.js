@@ -55,3 +55,8 @@ async function show(name){
 const metrics=document.querySelectorAll('.cards strong');
 async function refreshMetrics(){try{const records=await request('/api/permissions');metrics[0].textContent=records.filter(r=>r.status==='Active'&&r.expiresAtMs>Date.now()).length;document.querySelector('.cards small').textContent='Active local authorizations';}catch{metrics[0].textContent='—';}}
 await refreshMetrics();
+
+const chainPanel=document.createElement('section');chainPanel.className='panel audit-panel';
+chainPanel.append(text('h2','NEAR Testnet vault'),text('p','Read live contract state from NEAR. Dashboard requests remain local policy checks.'));
+const chainRefresh=text('button','Refresh live Testnet state');chainRefresh.className='scenario';const chainOutput=document.createElement('div');chainOutput.setAttribute('role','status');chainPanel.append(chainRefresh,chainOutput);main.append(chainPanel);
+chainRefresh.onclick=async()=>{chainRefresh.disabled=true;chainOutput.replaceChildren(text('p','Reading finalized Testnet state…'));try{const data=await request('/api/near/status');chainOutput.replaceChildren();for(const [label,value] of [['Account',data.account],['Finalized block',data.blockHeight],['Balance (yoctoNEAR)',data.balanceYocto],['Pending (yoctoNEAR)',data.pendingYocto],['Code hash',data.codeHash],['Last checked',data.checkedAt]])chainOutput.append(text('p',label+': '+value));const details=document.createElement('details');details.append(text('summary','On-chain authorization 0'),text('pre',data.authorizationJson));chainOutput.append(details);}catch(err){chainOutput.replaceChildren(text('p',err.message));}finally{chainRefresh.disabled=false;}};
