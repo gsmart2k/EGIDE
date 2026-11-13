@@ -2,6 +2,50 @@ const list=document.querySelector('#scenarios');const result=document.querySelec
 const scenarios=await fetch('/api/scenarios').then(r=>r.json());
 for(const scenario of scenarios){const button=document.createElement('button');button.className='scenario';button.textContent=scenario.label;button.addEventListener('click',async()=>{document.querySelectorAll('.scenario').forEach(el=>el.classList.remove('selected'));button.classList.add('selected');result.className='result muted';result.textContent='Evaluating policy...';try{const response=await fetch(`/api/simulate/${scenario.id}`,{method:'POST'});if(!response.ok)throw Error('Simulation unavailable');const data=await response.json();const {decision}=data;result.className=`result ${decision.allowed?'allowed':'blocked'}`;result.replaceChildren();const title=document.createElement('div');title.className='status';title.textContent=decision.allowed?'✓ AUTHORIZED (SIMULATED)':'✕ BLOCKED (SIMULATED)';const detail=document.createElement('div');detail.textContent=decision.allowed?'All deterministic policy checks passed. No funds were moved.':`Policy violations: ${decision.reasons.join(', ')}`;const foot=document.createElement('small');foot.textContent='Offchain policy evaluation · Not a blockchain transaction';result.append(title,detail,foot)}catch(e){result.textContent=e.message}});list.append(button)}
 const auditBox=document.querySelector('#audit-feed');
-async function refreshAudit(){try{const {entries,verification}=await fetch('/api/audit').then(r=>r.json());auditBox.replaceChildren();const status=document.createElement('p');status.textContent=`Local hash chain: ${verification.valid?'VALID':'TAMPERING DETECTED'} · ${verification.checked} records`;status.className=verification.valid?'green':'warning';auditBox.append(status);for(const row of entries.slice(-8).reverse()){const el=document.createElement('div');el.className='audit-row';el.textContent=`#${row.sequence} · ${row.event.scenario} · ${row.event.decision.allowed?'ALLOWED':'BLOCKED'} · ${row.timestamp}`;auditBox.append(el)}}catch{auditBox.textContent='Audit log unavailable'}}
+async function refreshAudit(){try{const {entries,verification}=await fetch('/api/audit').then(r=>r.json());auditBox.replaceChildren();const status=document.createElement('p');status.textContent=`Local hash chain: ${verification.valid?'VALID':'TAMPERING DETECTED'} · ${verification.checked} records`;status.className=verification.valid?'green':'warning';auditBox.append(status);for(const row of entries.slice(-8).reverse()){const el=document.createElement('div');el.className='audit-row';el.textContent=`#${row.sequence} · ${row.event.scenario||row.event.kind} · ${row.event.decision?(row.event.decision.allowed?'ALLOWED':'BLOCKED'):'RECORDED'} · ${row.timestamp}`;auditBox.append(el)}}catch{auditBox.textContent='Audit log unavailable'}}
 for(const b of document.querySelectorAll('.scenario'))b.addEventListener('click',()=>setTimeout(refreshAudit,150));
 refreshAudit();
+
+const main=document.querySelector('main');
+const original=[...main.children];
+const workspace=document.createElement('section');workspace.className='panel';workspace.hidden=true;main.append(workspace);
+const nav=document.createElement('nav');nav.className='workspace-nav';
+for(const name of ['Overview','Authorizations','Agent Activity','Attack Lab']){
+ const button=document.createElement('button');button.textContent=name;button.className='scenario';
+ button.onclick=()=>show(name);nav.append(button);
+}
+main.prepend(nav);
+const sideLinks=[...document.querySelectorAll('aside a')];
+sideLinks.forEach((a,i)=>{a.href='#'+['overview','authorizations','activity','lab'][i];a.onclick=e=>{e.preventDefault();show(['Overview','Authorizations','Agent Activity','Attack Lab'][i]);};});
+async function request(url,body){const r=await fetch(url,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});const data=await r.json();if(!r.ok)throw Error(data.error||'Request failed');return data;}
+function text(tag,value){const el=document.createElement(tag);el.textContent=value;return el;}
+async function show(name){
+ original.forEach(el=>el.hidden=name!=='Overview'&&name!=='Attack Lab');workspace.hidden=name==='Overview'||name==='Attack Lab';
+ sideLinks.forEach(a=>a.classList.toggle('active',a.textContent.includes(name)));
+ if(name==='Attack Lab'){document.querySelector('.grid').scrollIntoView({behavior:'smooth'});return;}
+ if(name==='Overview'){await refreshAudit();await refreshMetrics();return;}
+ workspace.replaceChildren(text('h1',name));
+ try{
+ if(name==='Authorizations'){
+  workspace.append(text('p','Create and revoke local payment policies. These records persist in the local audit log; creating one does not submit a NEAR transaction.'));
+  const form=document.createElement('form');form.className='permission-form';
+  for(const [field,label,type] of [['agent','Agent account','text'],['recipient','Recipient account','text'],['amountYocto','Exact amount (yoctoNEAR)','text'],['expires','Expires at','datetime-local']]){
+   const wrapper=document.createElement('label');wrapper.textContent=label;const input=document.createElement('input');input.name=field;input.type=type;input.required=true;wrapper.append(input);form.append(wrapper);
+  }
+  const save=text('button','Create authorization');save.className='run';const message=text('p','');form.append(save,message);
+  form.onsubmit=async e=>{e.preventDefault();save.disabled=true;try{const values=Object.fromEntries(new FormData(form));await request('/api/permissions',{...values,expiresAtMs:new Date(values.expires).getTime()});await show(name);}catch(err){message.textContent=err.message;save.disabled=false;}};
+  workspace.append(form);
+  const records=await request('/api/permissions');
+  if(!records.length)workspace.append(text('p','No local authorizations yet. Create your first policy above.'));
+  for(const record of records){const row=document.createElement('article');row.className='audit-row';row.append(text('h2',record.status+' · '+record.id.slice(0,8)),text('p',record.agent+' → '+record.recipient),text('p',record.amountYocto+' yoctoNEAR · expires '+new Date(record.expiresAtMs).toLocaleString()));
+   if(record.status==='Active'){const revoke=text('button','Revoke');revoke.className='scenario';revoke.onclick=async()=>{try{await request('/api/permissions',{action:'revoke',id:record.id});await show(name);}catch(err){message.textContent=err.message;}};row.append(revoke);}workspace.append(row);
+  }
+ }else{
+  const {entries,verification}=await request('/api/audit');workspace.append(text('p','Local activity · '+entries.length+' recent records · chain '+(verification.valid?'valid':'invalid')));
+  for(const row of entries.reverse())workspace.append(text('div','#'+row.sequence+' · '+row.event.kind+' · '+(row.event.scenario||row.event.permission?.agent||row.event.id||'')+' · '+row.timestamp));
+ }
+ }catch(err){workspace.append(text('p',err.message));}
+}
+const metrics=document.querySelectorAll('.cards strong');
+async function refreshMetrics(){try{const records=await request('/api/permissions');metrics[0].textContent=records.filter(r=>r.status==='Active'&&r.expiresAtMs>Date.now()).length;document.querySelector('.cards small').textContent='Active local authorizations';}catch{metrics[0].textContent='—';}}
+await refreshMetrics();

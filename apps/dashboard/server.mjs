@@ -25,6 +25,26 @@ export function createServer({auditFile=process.env.ÉGIDE_AUDIT_FILE||path.join
  // Reject cross-origin browser POSTs; the lab is local-only and unauthenticated.
  if(req.method==='POST'){const origin=req.headers.origin;if(origin && !allowedOrigins.has(origin) && origin !== `http://localhost:${req.socket.localPort}` && origin !== `http://127.0.0.1:${req.socket.localPort}`)return json(res,403,{error:'Cross-origin request denied'});}
  if(url.pathname==='/api/health' && req.method==='GET')return json(res,200,{name:'EGIDE',version:'0.5.0',mode:'offchain-local-demo',onchain:false});
+ if(url.pathname==='/api/permissions'){
+  try{
+   const entries=await audit.entries();
+   const permissions=new Map();
+   for(const row of entries){const e=row.event;if(e.kind==='permission_created')permissions.set(e.permission.id,e.permission);if(e.kind==='permission_revoked'&&permissions.has(e.id))permissions.get(e.id).status='Revoked';}
+   if(req.method==='GET')return json(res,200,[...permissions.values()]);
+   if(req.method==='POST'){
+    let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>4096)return json(res,413,{error:'Request too large'});}
+    const input=JSON.parse(raw);
+    if(input.action==='revoke'){
+     if(!permissions.has(input.id))return json(res,404,{error:'Unknown authorization'});
+     await audit.append({kind:'permission_revoked',id:input.id,onchain:false});return json(res,200,{ok:true});
+    }
+    const validAccount=v=>typeof v==='string'&&/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/.test(v)&&v.length>=2&&v.length<=64;
+    if(!validAccount(input.agent)||!validAccount(input.recipient)||!/^\d+$/.test(input.amountYocto)||BigInt(input.amountYocto)<=0n||!Number.isSafeInteger(input.expiresAtMs)||input.expiresAtMs<=Date.now())return json(res,400,{error:'Provide valid accounts, a positive yoctoNEAR amount and a future expiry'});
+    const permission={id:crypto.randomUUID(),agent:input.agent,recipient:input.recipient,amountYocto:input.amountYocto,expiresAtMs:input.expiresAtMs,status:'Active'};
+    await audit.append({kind:'permission_created',permission,onchain:false});return json(res,201,permission);
+   }
+  }catch{return json(res,400,{error:'Unable to process authorization'});}
+ }
  if(req.method==='GET'&&url.pathname==='/api/audit')return json(res,200,{entries:(await audit.entries()).slice(-50),verification:await audit.verify()});
  if(req.method==='GET'&&url.pathname==='/api/audit/verify')return json(res,200,await audit.verify());
  if(req.method==='GET'&&url.pathname==='/api/scenarios')return json(res,200,Object.entries(cases).map(([id,v])=>({id,label:v.label})));
