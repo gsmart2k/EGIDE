@@ -10,18 +10,18 @@
 
 **30–40s**: Run replay and show audit history. “Consumed authorizations cannot be reused; the prototype records decisions in a hash-chained local log.”
 
-**40–45s**: “This demo is offchain. The next step is to validate the NEAR contract in sandbox and connect real Testnet transactions.”
+**40–45s**: “The dashboard is deliberately local. Separately, ÉGIDE's contract completed a verified NEAR Testnet authorization and callback payment, and rejected a replay. The receipts are public in the repository.”
 
 ## Submission readiness checklist
 
 - [x] Runnable local dashboard and reproducible tests
 - [x] Attack demonstration with deterministic outcomes
 - [x] Transparent security limitations
-- [ ] Compile NEAR Rust vault (Rust toolchain not available in current build environment)
+- [x] Compile NEAR Rust vault with `cargo-near`
 - [ ] NEAR sandbox contract tests and callback/funds invariants
-- [ ] Testnet deployment and transaction receipts
-- [ ] Public GitHub repository and reproducible install instructions
+- [x] Testnet deployment, authorization, callback payment and replay-rejection receipts
+- [x] Public GitHub repository and reproducible install instructions
 - [ ] Recorded public demo video and X post
 - [ ] Verify submission rules/deadline and submit on official form
 
-**Do not claim Testnet deployment, onchain attack prevention or audited security without verifiable evidence.**
+**Do not claim audited security, dashboard-onchain integration, or broader attack prevention beyond the documented Testnet evidence.**
